@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portal da Melhor Idade - Hortolândia</title>
+<link rel="stylesheet" th:href="@{/css/estilo.css}">
+</head>
+<body>
+<div class="phone"><main id="app"></main>
+<nav class="nav" aria-label="Navegação principal">
+<button data-go="home"><span class="ms" aria-hidden="true">⌂</span>Início</button>
+<button data-go="busca"><span class="ms" aria-hidden="true">⌕</span>Buscar</button>
+<button data-go="ajuda"><span class="ms" aria-hidden="true">? </span>Ajuda</button>
+<button data-go="sobre"><span class="ms" aria-hidden="true">ⓘ</span>Sobre</button>
+</nav></div>
+<!-- Conteúdo do CatalogoService, entregue à interface como JSON. -->
+<script th:inline="javascript">window.PMI_CATALOGO = /*[[${catalogo}]]*/ {secoes: [], emergencias: []};</script>
+<script th:src="@{/js/portal.js}"></script>
+</body>
+</html>
