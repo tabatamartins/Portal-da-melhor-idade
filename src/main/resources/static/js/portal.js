@@ -55,7 +55,7 @@ var ALL=[];Object.keys(D).forEach(function(k){if(D[k].it)D[k].it.forEach(functio
 function hdr(k,t,s,c){return '<header class="hdr '+c+'"><button class="ib" data-go="back" aria-label="Voltar">'+ic("arrow_back")+'</button><div><h1 tabindex="-1">'+esc(t)+'</h1><p>'+esc(s)+'</p></div><button class="ib" data-go="acess" aria-label="Acessibilidade e preferências">'+ic("accessibility_new")+'</button></header>'}
 function itemBtn(x,semEmoji){return '<li><button class="item" data-det="'+x.k+':'+x.j+'">'+(semEmoji?'<span class="ms" aria-hidden="true">•</span>':ic(x.ic))+'<span class="tx"><b>'+esc(x.t)+'</b><small>'+esc(x.d)+'</small></span>'+ic("chevron_right")+'</button></li>'}
 var V={
-home:function(){return '<div class="body"><div class="brand">'+ic("volunteer_activism")+'<h1 tabindex="-1">Portal da<br>Melhor Idade</h1></div><p>Serviços públicos e informações oficiais para a pessoa idosa em Hortolândia/SP.</p>'+
+home:function(){return '<div class="body"><div class="brand"><img src="/img/logo.png" alt="Logo Portal da Melhor Idade" style="width:72px;height:72px;border-radius:18px;margin-bottom:8px;box-shadow:0 6px 16px rgba(0,0,0,0.15);object-fit:cover"><h1 tabindex="-1">Portal da<br>Melhor Idade</h1></div><p>Serviços públicos e informações oficiais para a pessoa idosa em Hortolândia/SP.</p>'+
  '<button class="search" data-go="busca"><span>Buscar serviços…</span>'+ic("search")+'</button>'+
  '<div class="abar" role="group" aria-label="Barra de acessibilidade rápida"><button data-a="menos" aria-label="Diminuir o tamanho das letras">A−</button><button data-a="mais" aria-label="Aumentar o tamanho das letras">A+</button><button data-a="contr" aria-label="Ativar ou desativar alto contraste">'+ic("contrast")+' Contraste</button><button data-a="tema" aria-label="Alternar modo claro e escuro">'+ic("dark_mode")+' Claro/Escuro</button></div>'+
  '<div class="tiles"><button class="tile" data-go="saude">'+ic("health_and_safety")+'Saúde e Bem-Estar</button><button class="tile hi" data-go="direitos">'+ic("balance")+'Direitos e Benefícios</button><button class="tile em" data-go="emergencia">'+ic("warning")+'Emergência e Proteção</button><button class="tile ok" data-go="lazer">'+ic("directions_bus")+'Transporte e Lazer</button></div>'+
@@ -163,9 +163,11 @@ function addChatMsg(texto,isUser,audioMsg){
 }
 
 function toggleChat(abrir){
- var m=$("#chat-modal"),f=$("#fab-chat");if(!m)return;
+ var m=$("#chat-modal"),f=$("#fab-chat"),bk=$("#chat-backdrop");if(!m)return;
  var show=typeof abrir==="boolean"?abrir:m.hidden;
- m.hidden=!show;if(f)f.setAttribute("aria-expanded",String(show));
+ m.hidden=!show;
+ if(bk)bk.hidden=!show;
+ if(f)f.setAttribute("aria-expanded",String(show));
  if(show){
   var inp=$("#chat-input");if(inp)inp.focus();
   var msgs=$("#chat-msgs");if(msgs)msgs.scrollTop=msgs.scrollHeight;
@@ -177,15 +179,20 @@ function processar(txt,fromChat){
  var f=$("#fa01");if(f)f.hidden=true;
  say("Entendi, só um momento…");logar('> "'+txt+'"');
  addChatMsg(txt,true);
- var badge=$("#chat-badge");if(badge)badge.textContent="Processando…";
+ var msgs=$("#chat-msgs");
+ var typ=document.createElement("div");typ.id="chat-typing";typ.className="chat-bubble bot chat-typing";
+ typ.innerHTML='<span class="dot"></span><span class="dot"></span><span class="dot"></span> <span>Pensando…</span>';
+ if(msgs){msgs.appendChild(typ);msgs.scrollTop=msgs.scrollHeight}
+ var badge=$("#chat-badge");if(badge)badge.textContent="✦ Pensando…";
  var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort()},8000); /* RNF03: tempo limite de 8 s */
  fetch("/api/agente",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto:txt,nivelFonte:st.size}),signal:ctrl.signal})
  .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
  .then(function(resp){clearTimeout(timer);
-  var provedor=resp.origem||"IA";
-  if(badge)badge.textContent="IA: "+provedor;
+  var tEl=$("#chat-typing");if(tEl)tEl.remove();
+  var isGemini=resp.origem&&resp.origem.toLowerCase().indexOf("gemini")>-1;
+  if(badge)badge.textContent=isGemini?"✦ Google Gemini IA":"✦ Assistente Oficial";
   var msgSrv=resp.mensagem&&resp.mensagem.trim()?resp.mensagem:null;
-  logar("  provedor: "+provedor);
+  logar("  provedor: "+(resp.origem||"IA"));
   if(resp.fa01){
    logar("  confiança "+resp.confianca+" < 0,80 → FA01 (nenhuma ferramenta executada)");
    var msgFa01=msgSrv||"Não entendi com certeza. Escolha uma opção abaixo.";
@@ -204,7 +211,8 @@ function processar(txt,fromChat){
  })
  .catch(function(){
   clearTimeout(timer);
-  if(badge)badge.textContent="Indisponível no momento";
+  var tEl=$("#chat-typing");if(tEl)tEl.remove();
+  if(badge)badge.textContent="✦ Assistente Conectado";
   logar("  falha ou tempo esgotado (8 s) → FA01");
   fa01("Não consegui falar com o assistente agora. Use as opções abaixo.");
  });
@@ -244,10 +252,10 @@ window.addEventListener("beforeinstallprompt",function(e){
 
 /* ---------- Eventos ---------- */
 document.addEventListener("click",function(e){
- var t=e.target.closest("button,a");if(!t)return;
+ var t=e.target.closest("button,a,div#chat-backdrop");if(!t)return;
  var d=t.dataset;
+ if(t.id==="chat-backdrop"||t.id==="chat-close"){toggleChat(false);return}
  if(t.id==="fab-chat"||t.closest("#fab-chat")){toggleChat();return}
- if(t.id==="chat-close"){toggleChat(false);return}
  if(t.id==="chat-send"){var ci=$("#chat-input");if(ci){processar(ci.value,true);ci.value=""}return}
  if(d.chatCmd){processar(d.chatCmd,true);return}
  if(t.id==="pwa-install-btn"){

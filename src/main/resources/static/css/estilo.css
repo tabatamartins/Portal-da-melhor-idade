@@ -807,9 +807,9 @@ html[data-contrast="alto"] .team-card.destaque {
    ========================================================== */
 .fab-chat {
   position: fixed;
-  right: 16px;
-  bottom: calc(85px + env(safe-area-inset-bottom, 0px));
-  z-index: 99;
+  right: 18px;
+  bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+  z-index: 95;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -818,8 +818,8 @@ html[data-contrast="alto"] .team-card.destaque {
   color: var(--onpri);
   border: 3px solid var(--hi);
   border-radius: 9999px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  font-size: 1.15rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -834,19 +834,41 @@ html[data-contrast="alto"] .team-card.destaque {
   font-size: 1.6rem;
 }
 
+/* Fundo escuro (Backdrop) para focar a atenção do idoso */
+.chat-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 180;
+  animation: fadeInBackdrop 0.2s ease-out;
+}
+
+.chat-backdrop[hidden] {
+  display: none !important;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Painel / Modal do Chat */
 .chat-modal {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   bottom: 0;
   width: 100%;
-  max-width: 480px;
-  height: min(85dvh, 650px);
+  max-width: 500px;
+  margin: 0 auto;
+  height: 85dvh;
+  max-height: 640px;
   background: var(--bg);
   border: 3px solid var(--bd);
+  border-bottom: none;
   border-radius: 24px 24px 0 0;
-  box-shadow: 0 -8px 35px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -855,24 +877,26 @@ html[data-contrast="alto"] .team-card.destaque {
 }
 
 @keyframes slideUpChat {
-  from { transform: translate(-50%, 100%); }
-  to { transform: translate(-50%, 0); }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 @media (min-width: 640px) {
   .chat-modal {
-    max-width: 520px;
-    right: 24px;
     left: auto;
-    transform: none;
-    bottom: 24px;
+    right: 24px;
+    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+    width: 410px;
+    max-width: calc(100vw - 48px);
+    height: min(70dvh, 580px);
     border-radius: 24px;
-    height: min(75dvh, 620px);
-    animation: fadeInChat 0.2s ease-out;
+    border-bottom: 3px solid var(--bd);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.25);
+    animation: popInChat 0.2s ease-out;
   }
-  @keyframes fadeInChat {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  @keyframes popInChat {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 }
 
@@ -908,8 +932,9 @@ html[data-contrast="alto"] .team-card.destaque {
 
 .chat-badge {
   font-size: 0.85rem;
-  opacity: 0.9;
+  opacity: 0.95;
   display: block;
+  font-weight: 600;
 }
 
 .chat-close-btn {
@@ -977,13 +1002,38 @@ html[data-contrast="alto"] .team-card.destaque {
 
 .chat-bubble small {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: var(--muted);
   margin-top: 6px;
 }
 
 .chat-bubble.user small {
   color: rgba(255, 255, 255, 0.8);
+}
+
+.chat-typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-style: italic;
+  color: var(--muted);
+  padding: 12px 18px;
+}
+
+.chat-typing .dot {
+  width: 9px;
+  height: 9px;
+  background: var(--pri);
+  border-radius: 50%;
+  animation: waveDot 1.2s infinite ease-in-out;
+}
+
+.chat-typing .dot:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes waveDot {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
 }
 
 .chat-audio-btn {
@@ -1001,15 +1051,20 @@ html[data-contrast="alto"] .team-card.destaque {
   cursor: pointer;
 }
 
-/* Sugestões Rápidas (Chips) dentro do Chat */
+/* Sugestões Rápidas (Chips) dentro do Chat sem scrollbar feia */
 .chat-chips {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 10px 14px;
+  padding: 12px 14px;
   background: var(--card);
   border-top: 1px solid var(--bd);
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chat-chips::-webkit-scrollbar {
+  display: none;
 }
 
 .chat-chip {
@@ -1023,12 +1078,13 @@ html[data-contrast="alto"] .team-card.destaque {
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .chat-chip:hover {
   background: var(--hi);
   color: var(--onhi);
+  transform: translateY(-1px);
 }
 
 /* Barra de Entrada de Texto do Chat */
