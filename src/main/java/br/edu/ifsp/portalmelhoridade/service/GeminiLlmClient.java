@@ -45,14 +45,14 @@ public class GeminiLlmClient implements ProvedorLlm {
             ObjectMapper objectMapper,
             RestClient.Builder restClientBuilder,
             @Value("${gemini.api.key:${GEMINI_API_KEY:}}") String apiKey,
-            @Value("${gemini.model:gemini-3.5-flash-lite}") String model,
+            @Value("${gemini.model:${GEMINI_MODEL:gemini-2.5-flash}}") String model,
             @Value("${gemini.base-url:https://generativelanguage.googleapis.com/v1beta}") String baseUrl,
             @Value("${gemini.timeout-seconds:6}") int timeoutSeconds) {
 
         this.fallback = fallback;
         this.objectMapper = objectMapper;
         this.apiKey = apiKey != null ? apiKey.trim() : "";
-        this.model = (model != null && !model.isBlank()) ? model.trim() : "gemini-3.5-flash-lite";
+        this.model = (model != null && !model.isBlank()) ? model.trim() : "gemini-2.5-flash";
 
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(Duration.ofSeconds(3));
@@ -112,8 +112,11 @@ public class GeminiLlmClient implements ProvedorLlm {
             String jsonIntencao = textNode.asText();
             GeminiRespostaDto dto = objectMapper.readValue(jsonIntencao, GeminiRespostaDto.class);
             List<ChamadaTool> chamadas = dto.chamadas() != null ? dto.chamadas() : List.of();
-            // Não reproduzimos texto livre do modelo na tela ou na voz.
-            String mensagem = "Entendi o pedido.";
+            
+            // Utiliza a mensagem acolhedora gerada pelo modelo ou mensagem padrão de confirmação
+            String mensagem = (dto.mensagem() != null && !dto.mensagem().isBlank())
+                    ? dto.mensagem().trim()
+                    : "Entendi o pedido.";
 
             double confianca = Math.max(0.0, Math.min(1.0, dto.confianca()));
             if (mensagem.length() > 240) mensagem = mensagem.substring(0, 240);

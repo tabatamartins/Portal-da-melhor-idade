@@ -68,7 +68,7 @@ det:function(k,j){
  var x=D[k].it[j],c=D[k].c;
  var telClean=x.tel?x.tel.replace(/[^\d+]/g,""):"";
  var foneHtml=x.tel?'<dt>Telefone oficial</dt><dd><a class="link-tel" href="tel:'+esc(telClean)+'" aria-label="Ligar para '+esc(x.tel)+'">'+ic("call")+' <b>'+esc(x.tel)+'</b> <small>(Toque para ligar)</small></a></dd>':'';
- var endHtml=x.end?'<dt>Endereço</dt><dd>'+esc(x.end)+'</dd>':'';
+ var endHtml=x.end?'<dt>Endereço</dt><dd>'+esc(x.end)+'<br><a class="link-ext" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(x.end+', Hortolândia - SP')+'" target="_blank" rel="noopener noreferrer">📍 Ver no Google Maps ↗</a></dd>':'';
  var horHtml=x.hor?'<dt>Horário de atendimento</dt><dd>'+esc(x.hor)+'</dd>':'';
  var fonHtml=x.fon?'<dt>Fonte oficial</dt><dd><a class="link-ext" href="' + esc(x.fon) + '" target="_blank" rel="noopener noreferrer">Acessar página oficial do órgão ↗</a></dd>':'';
  var dtHtml=x.dt?'<p class="note"><b>Dados oficiais conferidos.</b><br>Última verificação: '+esc(x.dt)+'</p>':'';
@@ -145,27 +145,116 @@ function permitida(c){if(!c||!Object.prototype.hasOwnProperty.call(TOOLS,c.name)
  if((c.name==="navegarParaSecao"||c.name==="executarLeituraVoz")&&!Object.prototype.hasOwnProperty.call(D,a.idSecao))return"seção inexistente";return null}
 function logar(x){LOG=(LOG?LOG+"\n":"")+x;var l=$("#log");if(l){l.textContent=LOG;l.scrollTop=l.scrollHeight}}
 function say(m){var s=$("#status");if(s)s.textContent=m}
-function fa01(m){say(m);var f=$("#fa01");if(f)f.hidden=false;falar("Não entendi com certeza. Escolha uma das opções na tela.")}
-function processar(txt){txt=(txt||"").trim();if(!txt)return;var f=$("#fa01");if(f)f.hidden=true;say("Entendi, só um momento…");logar('> "'+txt+'"');
+function fa01(m){say(m);var f=$("#fa01");if(f)f.hidden=false;falar("Não entendi com certeza. Escolha uma das opções na tela.");addChatMsg(m||"Não entendi com certeza. Escolha uma das opções abaixo.",false)}
+
+/* Adiciona balão de mensagem ao chat flutuante */
+function addChatMsg(texto,isUser,audioMsg){
+ var msgs=$("#chat-msgs");if(!msgs)return;
+ var b=document.createElement("div");b.className="chat-bubble "+(isUser?"user":"bot");
+ var p=document.createElement("p");p.textContent=texto;b.appendChild(p);
+ if(!isUser&&audioMsg){
+  var btn=document.createElement("button");btn.className="chat-audio-btn";
+  btn.setAttribute("aria-label","Ouvir esta mensagem em voz alta");
+  btn.innerHTML="🔊 Ouvir";
+  btn.onclick=function(){falar(audioMsg)};
+  b.appendChild(btn);
+ }
+ msgs.appendChild(b);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function toggleChat(abrir){
+ var m=$("#chat-modal"),f=$("#fab-chat");if(!m)return;
+ var show=typeof abrir==="boolean"?abrir:m.hidden;
+ m.hidden=!show;if(f)f.setAttribute("aria-expanded",String(show));
+ if(show){
+  var inp=$("#chat-input");if(inp)inp.focus();
+  var msgs=$("#chat-msgs");if(msgs)msgs.scrollTop=msgs.scrollHeight;
+ }
+}
+
+function processar(txt,fromChat){
+ txt=(txt||"").trim();if(!txt)return;
+ var f=$("#fa01");if(f)f.hidden=true;
+ say("Entendi, só um momento…");logar('> "'+txt+'"');
+ addChatMsg(txt,true);
+ var badge=$("#chat-badge");if(badge)badge.textContent="Processando…";
  var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort()},8000); /* RNF03: tempo limite de 8 s */
  fetch("/api/agente",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto:txt,nivelFonte:st.size}),signal:ctrl.signal})
  .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
  .then(function(resp){clearTimeout(timer);
-  /* Usa a mensagem retornada pelo servidor (Gemini ou LlmSimulado) no status e na voz */
+  var provedor=resp.origem||"IA";
+  if(badge)badge.textContent="IA: "+provedor;
   var msgSrv=resp.mensagem&&resp.mensagem.trim()?resp.mensagem:null;
-   logar("  provedor: "+(resp.origem||"não identificado"));
-  if(resp.fa01){logar("  confiança "+resp.confianca+" < 0,80 → FA01 (nenhuma ferramenta executada)");fa01(msgSrv||"Não entendi com certeza. Escolha uma opção abaixo.");return}
+  logar("  provedor: "+provedor);
+  if(resp.fa01){
+   logar("  confiança "+resp.confianca+" < 0,80 → FA01 (nenhuma ferramenta executada)");
+   var msgFa01=msgSrv||"Não entendi com certeza. Escolha uma opção abaixo.";
+   fa01(msgFa01);return;
+  }
   (resp.bloqueadas||[]).forEach(function(b){logar("  ✗ bloqueada no servidor: "+b)});
   var n=0;
-  (resp.chamadas||[]).forEach(function(c){var e=permitida(c);if(e){logar("  ✗ "+JSON.stringify(c)+" bloqueada: "+e);return}var res=TOOLS[c.name](c.arguments);logar("  ✓ "+JSON.stringify(c)+" → "+JSON.stringify(res));n++});
-  var textoFinal=n?(msgSrv||"Pronto: "+n+" ação(ões) feita(s)."):"Não consegui fazer essa ação.";
-  say(textoFinal);if(n&&msgSrv)falar(msgSrv);})
- .catch(function(){clearTimeout(timer);logar("  falha ou tempo esgotado (8 s) → FA01");fa01("Não consegui falar com o assistente agora. Use as opções abaixo.")})}
-function ligaMic(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition,m=$("#mic");if(!m||!SR)return;m.style.display="";
- m.onclick=function(){try{var r=new SR();r.lang="pt-BR";r.onresult=function(e){var t=e.results[0][0].transcript;$("#cmd").value=t;processar(t)};r.onerror=function(){say("Não consegui ouvir. Escreva o comando no campo.")};say("Estou ouvindo…");r.start()}catch(x){say("Microfone indisponível. Escreva no campo.")}}}
+  (resp.chamadas||[]).forEach(function(c){
+   var e=permitida(c);if(e){logar("  ✗ "+JSON.stringify(c)+" bloqueada: "+e);return}
+   var res=TOOLS[c.name](c.arguments);logar("  ✓ "+JSON.stringify(c)+" → "+JSON.stringify(res));n++;
+  });
+  var textoFinal=n?(msgSrv||"Pronto! Ação realizada."):"Não consegui fazer essa ação.";
+  say(textoFinal);
+  addChatMsg(textoFinal,false,textoFinal);
+  falar(textoFinal);
+ })
+ .catch(function(){
+  clearTimeout(timer);
+  if(badge)badge.textContent="Indisponível no momento";
+  logar("  falha ou tempo esgotado (8 s) → FA01");
+  fa01("Não consegui falar com o assistente agora. Use as opções abaixo.");
+ });
+}
+
+function ligaMic(btnId,inputElId){
+ var SR=window.SpeechRecognition||window.webkitSpeechRecognition,m=$(btnId);if(!m||!SR)return;
+ m.style.display="";
+ m.onclick=function(){
+  try{
+   var r=new SR();r.lang="pt-BR";
+   m.classList.add("recording");
+   r.onresult=function(e){
+    m.classList.remove("recording");
+    var t=e.results[0][0].transcript;
+    var inp=$(inputElId);if(inp)inp.value=t;
+    processar(t,true);
+   };
+   r.onerror=function(){m.classList.remove("recording");say("Não consegui ouvir. Tente digitar.")};
+   r.onend=function(){m.classList.remove("recording")};
+   say("Estou ouvindo…");r.start();
+  }catch(x){m.classList.remove("recording");say("Microfone indisponível.")}
+ };
+}
+
+/* ---------- PWA: Service Worker e Banner de Instalação ---------- */
+if("serviceWorker" in navigator){
+ window.addEventListener("load",function(){
+  navigator.serviceWorker.register("/sw.js").catch(function(e){console.warn("SW erro:",e)});
+ });
+}
+var pwaDeferredPrompt=null;
+window.addEventListener("beforeinstallprompt",function(e){
+ e.preventDefault();pwaDeferredPrompt=e;
+ var banner=$("#pwa-install-banner");if(banner)banner.hidden=false;
+});
 
 /* ---------- Eventos ---------- */
-document.addEventListener("click",function(e){var t=e.target.closest("button,a");if(!t)return;var d=t.dataset;
+document.addEventListener("click",function(e){
+ var t=e.target.closest("button,a");if(!t)return;
+ var d=t.dataset;
+ if(t.id==="fab-chat"||t.closest("#fab-chat")){toggleChat();return}
+ if(t.id==="chat-close"){toggleChat(false);return}
+ if(t.id==="chat-send"){var ci=$("#chat-input");if(ci){processar(ci.value,true);ci.value=""}return}
+ if(d.chatCmd){processar(d.chatCmd,true);return}
+ if(t.id==="pwa-install-btn"){
+  if(pwaDeferredPrompt){pwaDeferredPrompt.prompt();pwaDeferredPrompt.userChoice.then(function(){pwaDeferredPrompt=null})}
+  var b=$("#pwa-install-banner");if(b)b.hidden=true;return;
+ }
+ if(t.id==="pwa-dismiss-btn"){var b2=$("#pwa-install-banner");if(b2)b2.hidden=true;return}
  if(d.go){e.preventDefault();if(d.go==="back")voltar();else{hist.length=d.go==="home"?0:hist.length;go(d.go)}}
  else if(d.det){var p=d.det.split(":");go("det",p[0],+p[1])}
  else if(d.a)ajusta(d.a);
@@ -174,9 +263,18 @@ document.addEventListener("click",function(e){var t=e.target.closest("button,a")
  else if(d.say)falar(d.say);
  else if(d.cat!==undefined){var q=$("#q").value;document.querySelectorAll("[data-cat]").forEach(function(b){b.setAttribute("aria-pressed",String(b===t))});filtrar(q,d.cat)}
  else if(d.ex){var c=$("#cmd");if(c)c.value=d.ex;processar(d.ex)}
- else if(t.id==="env")processar($("#cmd").value)});
+ else if(t.id==="env")processar($("#cmd").value);
+});
 document.addEventListener("input",function(e){if(e.target.id==="q")filtrar(e.target.value,catAtual)});
 document.addEventListener("change",function(e){if(e.target.id==="fs"){st.fonte=e.target.value;apply();save()}});
-document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="cmd")processar(e.target.value)});
+document.addEventListener("keydown",function(e){
+ if(e.key==="Enter"){
+  if(e.target.id==="cmd")processar(e.target.value);
+  else if(e.target.id==="chat-input"){processar(e.target.value,true);e.target.value=""}
+ }
+ if(e.key==="Escape"){toggleChat(false)}
+});
 load();apply();var h0=(location.hash||"").slice(1);go(D[h0]||(V[h0]&&h0!=="det")?h0:"home");
+ligaMic("#mic","#cmd");
+ligaMic("#chat-mic","#chat-input");
 })();

@@ -4,16 +4,87 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Portal da Melhor Idade - Hortolândia</title>
+
+<!-- PWA Manifest e Configurações Mobile -->
+<link rel="manifest" th:href="@{/manifest.json}">
+<meta name="theme-color" content="#145A64">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Melhor Idade">
+<link rel="apple-touch-icon" th:href="@{/img/icon-192.png}">
+<link rel="icon" type="image/png" th:href="@{/img/icon-192.png}">
+
 <link rel="stylesheet" th:href="@{/css/estilo.css}">
 </head>
 <body>
-<div class="phone"><main id="app"></main>
-<nav class="nav" aria-label="Navegação principal">
-<button data-go="home"><span class="ms" aria-hidden="true">⌂</span>Início</button>
-<button data-go="busca"><span class="ms" aria-hidden="true">⌕</span>Buscar</button>
-<button data-go="ajuda"><span class="ms" aria-hidden="true">? </span>Ajuda</button>
-<button data-go="sobre"><span class="ms" aria-hidden="true">ⓘ</span>Sobre</button>
-</nav></div>
+<div class="phone">
+  <main id="app"></main>
+  
+  <nav class="nav" aria-label="Navegação principal">
+    <button data-go="home"><span class="ms" aria-hidden="true">⌂</span>Início</button>
+    <button data-go="busca"><span class="ms" aria-hidden="true">⌕</span>Buscar</button>
+    <button data-go="ajuda"><span class="ms" aria-hidden="true">? </span>Ajuda</button>
+    <button data-go="sobre"><span class="ms" aria-hidden="true">ⓘ</span>Sobre</button>
+  </nav>
+
+  <!-- Banner de Instalação do Aplicativo (PWA) -->
+  <div id="pwa-install-banner" class="pwa-banner" hidden>
+    <div class="pwa-banner-content">
+      <span class="ms pwa-icon" aria-hidden="true">📱</span>
+      <div>
+        <b>Instalar no Celular</b>
+        <p>Acesse o Portal da Melhor Idade como um aplicativo!</p>
+      </div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button id="pwa-install-btn" class="pwa-btn-install">Instalar</button>
+      <button id="pwa-dismiss-btn" class="pwa-btn-dismiss" aria-label="Fechar aviso">Depois</button>
+    </div>
+  </div>
+
+  <!-- Botão Flutuante do Assistente IA (FAB) -->
+  <button id="fab-chat" class="fab-chat" aria-label="Abrir Assistente Virtual por voz e texto" aria-expanded="false">
+    <span class="ms" aria-hidden="true">🤖</span>
+    <span class="fab-text">Assistente</span>
+  </button>
+
+  <!-- Janela de Chat Flutuante do Assistente -->
+  <div id="chat-modal" class="chat-modal" hidden role="dialog" aria-modal="true" aria-labelledby="chat-title">
+    <div class="chat-header">
+      <div class="chat-title-group">
+        <span class="ms chat-bot-icon" aria-hidden="true">🤖</span>
+        <div>
+          <h2 id="chat-title">Assistente Virtual</h2>
+          <span class="chat-badge" id="chat-badge">Pronto para conversar</span>
+        </div>
+      </div>
+      <button id="chat-close" class="chat-close-btn" aria-label="Fechar janela do assistente">✕</button>
+    </div>
+    
+    <div class="chat-messages" id="chat-msgs" role="log" aria-live="polite">
+      <div class="chat-bubble bot">
+        <p>Olá! Sou o assistente do <b>Portal da Melhor Idade</b>. Como posso te ajudar hoje?</p>
+        <small>Você pode falar pelo microfone ou tocar em uma das opções abaixo:</small>
+      </div>
+    </div>
+    
+    <div class="chat-chips" aria-label="Sugestões de comandos rápidos">
+      <button class="chat-chip" data-chat-cmd="Quero ver postos de saúde">🏥 Postos de Saúde</button>
+      <button class="chat-chip" data-chat-cmd="Aumentar as letras">🔠 Aumentar Letras</button>
+      <button class="chat-chip" data-chat-cmd="Quero ver os telefones de emergência">🚨 Emergências</button>
+      <button class="chat-chip" data-chat-cmd="Ativar alto contraste">◐ Alto Contraste</button>
+      <button class="chat-chip" data-chat-cmd="Quero ver opções de transporte e lazer">🚌 Lazer e Ônibus</button>
+    </div>
+    
+    <div class="chat-input-bar">
+      <input type="text" id="chat-input" placeholder="Digite ou fale aqui…" aria-label="Mensagem para o assistente" autocomplete="off">
+      <button id="chat-mic" class="chat-icon-btn" aria-label="Falar pelo microfone" title="Falar">🎙️</button>
+      <button id="chat-send" class="chat-send-btn" aria-label="Enviar mensagem">Enviar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Conteúdo do CatalogoService, entregue à interface como JSON. -->
 <script th:inline="javascript">window.PMI_CATALOGO = /*[[${catalogo}]]*/ {secoes: [], emergencias: []};</script>
 <script th:src="@{/js/portal.js}"></script>
