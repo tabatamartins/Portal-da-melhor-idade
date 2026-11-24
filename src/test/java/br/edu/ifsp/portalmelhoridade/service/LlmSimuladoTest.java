@@ -70,4 +70,17 @@ class LlmSimuladoTest {
                 .filter(c -> "navegarParaSecao".equals(c.name())).count();
         assertEquals(2, navegacoes);
     }
+
+    @Test void saudacaoRetornaAltaConfiancaEMensagemAcolhedora() {
+        var r = llm.interpretar("olá, bom dia!");
+        assertTrue(r.confianca() >= 0.8);
+        assertTrue(r.mensagem().contains("Portal da Melhor Idade"));
+    }
+
+    @Test void perguntaTelefoneSamuAbreEmergenciaComMensagemClara() {
+        var r = llm.interpretar("qual o telefone do samu?");
+        assertTrue(r.confianca() >= 0.8);
+        assertTrue(r.mensagem().contains("192"));
+        assertEquals("emergencia", r.chamadas().get(0).arguments().get("idSecao"));
+    }
 }

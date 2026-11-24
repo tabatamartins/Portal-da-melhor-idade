@@ -37,9 +37,21 @@ public class AgenteService {
         int nivel = Math.max(ValidadorTools.FONTE_MIN,
                 Math.min(ValidadorTools.FONTE_MAX, pedido.nivelFonte()));
         ProvedorLlm.Intencao intencao = llm.interpretar(texto, nivel);
-        if (intencao == null || intencao.confianca() < LIMIAR_CONFIANCA || intencao.chamadas() == null || intencao.chamadas().isEmpty()) {
+        
+        if (intencao == null || intencao.confianca() < LIMIAR_CONFIANCA) {
             double conf = intencao != null ? intencao.confianca() : 0.0;
-            return fa01(conf, "Não entendi com certeza. Escolha uma opção.");
+            String msg = (intencao != null && intencao.mensagem() != null && !intencao.mensagem().isBlank())
+                    ? intencao.mensagem()
+                    : "Não entendi com certeza. Escolha uma das opções abaixo:";
+            return fa01(conf, msg);
+        }
+
+        // Resposta conversacional direta (sem ferramentas de tela necessárias, ex: saudações, esclarecimentos, dúvidas frequentes)
+        if (intencao.chamadas() == null || intencao.chamadas().isEmpty()) {
+            String msg = (intencao.mensagem() != null && !intencao.mensagem().isBlank())
+                    ? intencao.mensagem()
+                    : "Posso ajudar você a encontrar postos de saúde, direitos e benefícios, atividades de lazer e contatos de emergência em Hortolândia.";
+            return new RespostaAgente(intencao.confianca(), false, List.of(), List.of(), msg, intencao.origem());
         }
 
         List<ChamadaTool> autorizadas = new ArrayList<>();

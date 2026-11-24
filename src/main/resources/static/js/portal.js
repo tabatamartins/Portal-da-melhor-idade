@@ -204,7 +204,7 @@ function processar(txt,fromChat){
    var e=permitida(c);if(e){logar("  ✗ "+JSON.stringify(c)+" bloqueada: "+e);return}
    var res=TOOLS[c.name](c.arguments);logar("  ✓ "+JSON.stringify(c)+" → "+JSON.stringify(res));n++;
   });
-  var textoFinal=n?(msgSrv||"Pronto! Ação realizada."):"Não consegui fazer essa ação.";
+  var textoFinal = msgSrv || (n ? "Pronto! Ação realizada." : "Não consegui fazer essa ação.");
   say(textoFinal);
   addChatMsg(textoFinal,false,textoFinal);
   falar(textoFinal);

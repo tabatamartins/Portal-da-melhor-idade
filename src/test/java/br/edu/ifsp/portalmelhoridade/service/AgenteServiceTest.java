@@ -42,6 +42,14 @@ class AgenteServiceTest {
     }
 
     @Test
+    void ct04_saudacaoRetornaRespostaConversacionalSemErro() {
+        var r = agente.processar(new PedidoAgente("Olá, bom dia!", 0));
+        assertFalse(r.fa01());
+        assertTrue(r.chamadas().isEmpty());
+        assertTrue(r.mensagem().contains("Portal da Melhor Idade"));
+    }
+
+    @Test
     void ct05_fraseAmbiguaAcionaFA01() {
         var r = agente.processar(new PedidoAgente("Me ajuda aí", 0));
         assertTrue(r.fa01());

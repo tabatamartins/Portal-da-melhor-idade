@@ -104,6 +104,55 @@ public class LlmSimulado implements ProvedorLlm {
             return new Intencao(0.1, List.of(), "Esse comando não pôde ser processado por segurança.");
         }
 
+        // Saudações acolhedoras
+        if (t.matches("^(oi|ola|bom dia|boa tarde|boa noite|e ai|tudo bem|opa|alo)(\\s.*)?$")) {
+            return new Intencao(0.95, List.of(), "Olá! Tudo bem? Sou seu assistente do Portal da Melhor Idade de Hortolândia. Como posso te ajudar hoje? Posso mostrar postos de saúde, direitos, atividades de lazer e telefones úteis.");
+        }
+
+        // Quem é você / Apresentação
+        if (t.matches(".*\\b(quem e voce|o que voce faz|como funciona|quem criou|para que serve|como me ajuda|ajuda com o que)\\b.*")) {
+            return new Intencao(0.95, List.of(), "Sou o assistente virtual do Portal da Melhor Idade de Hortolândia! Posso te ajudar a encontrar postos de saúde, consultar direitos e benefícios, ver atividades no CCMI e acessar números de emergência.");
+        }
+
+        // Agradecimentos
+        if (t.matches("^(obrigado|obrigada|valeu|muito obrigado|muito obrigada|agradeco)(\\s.*)?$")) {
+            return new Intencao(0.95, List.of(), "De nada! Fico muito feliz em ajudar. Se precisar de mais alguma informação de Hortolândia, é só me chamar!");
+        }
+
+        // Dúvidas de telefones específicos
+        if (t.matches(".*\\b(telefone|numero|contato|ligar)\\b.{0,20}\\b(samu|ambulancia)\\b.*") || t.matches(".*\\b(samu|ambulancia)\\b.*\\b(telefone|numero)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "emergencia"))), "O telefone do SAMU é 192 (ligação gratuita, 24 horas). Abri os números de emergência na sua tela.");
+        }
+        if (t.matches(".*\\b(telefone|numero|contato|ligar)\\b.{0,20}\\b(policia|pm|viatura)\\b.*") || t.matches(".*\\b(policia|pm)\\b.*\\b(telefone|numero)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "emergencia"))), "O telefone da Polícia Militar é 190. Abri a seção de emergência na tela.");
+        }
+        if (t.matches(".*\\b(telefone|numero|contato|ligar)\\b.{0,20}\\b(bombeiro|bombeiros|fogo)\\b.*") || t.matches(".*\\b(bombeiro|bombeiros)\\b.*\\b(telefone|numero)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "emergencia"))), "O telefone do Corpo de Bombeiros é 193. Abri a seção de emergência na tela.");
+        }
+        if (t.matches(".*\\b(disque 100|direitos humanos|denuncia)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "emergencia"))), "O Disque Direitos Humanos é o número 100, canal gratuito para orientação e denúncias de proteção ao idoso.");
+        }
+        if (t.matches(".*\\b(defesa civil)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "emergencia"))), "A Defesa Civil de Hortolândia atende pelo número 199.");
+        }
+
+        // Dúvidas frequentes de Hortolândia
+        if (t.matches(".*\\b(vacina|vacinacao|gripe|covid)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "saude"))), "A vacinação para a terceira idade é realizada em todas as UBSs de Hortolândia de segunda a sexta-feira. Abri a lista de postos na tela para você.");
+        }
+        if (t.matches(".*\\b(remedio|medicamento|farmacia popular|remedios)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "saude"))), "Medicamentos básicos e de uso contínuo podem ser retirados com receita médica e Cartão SUS nas farmácias das UBSs de Hortolândia.");
+        }
+        if (t.matches(".*\\b(carteira|carteirinha|passe livre|transporte gratuito|onibus gratuito)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "direitos"))), "Pessoas com 60 anos ou mais têm gratuidade nos ônibus de Hortolândia. A carteira pode ser solicitada no CRAS com RG, CPF e comprovante de residência.");
+        }
+        if (t.matches(".*\\b(ccmi|centro de convivencia|danca|ginastica|oficina|hidroginastica|coral|artesanato)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "lazer"))), "O Centro de Convivência da Melhor Idade (CCMI) oferece dança, ginástica e oficinas no Remanso Campineiro e no Jd. Amanda. Abri as informações na tela!");
+        }
+        if (t.matches(".*\\b(inicio|voltar para o inicio|pagina inicial|home)\\b.*")) {
+            return new Intencao(0.95, List.of(new ChamadaTool("navegarParaSecao", Map.of("idSecao", "home"))), "Voltando para a página inicial do Portal da Melhor Idade.");
+        }
+
         if (t.matches(".*\\b(voltar|deixar|colocar|normalizar)\\b.{0,25}\\b(normal|padrao)\\b.*")
                 || t.matches(".*\\b(fonte|letra|tamanho)\\b.{0,20}\\b(normal|padrao)\\b.*")) {
             int nivel = Math.max(-2, Math.min(4, nivelFonte));
