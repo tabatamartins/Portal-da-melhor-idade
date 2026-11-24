@@ -1,4 +1,4 @@
-/* Portal da Melhor Idade - Interface acessível para a pessoa idosa em Hortolândia/SP.
+﻿/* Portal da Melhor Idade - Interface acessível para a pessoa idosa em Hortolândia/SP.
    O conteúdo vem do servidor Java (CatalogoService, injetado em window.PMI_CATALOGO).
    O comando do assistente é interpretado e validado no servidor (/api/agente);
    aqui executamos as chamadas autorizadas e gerenciamos síntese de voz, telas e preferências. */
@@ -106,6 +106,7 @@ var LOG="";
 
 /* ---------- Navegação ---------- */
 function go(n,a,b,back){
+ if(n==="ajuda"){toggleChat(true);return true;}
  if(!back&&cur!==n+(a?":"+a+":"+b:"")&&cur)hist.push(cur);
  var html,key=n;
  if(n==="home")html=V.home();else if(n==="saude"||n==="direitos"||n==="lazer")html=V.lista(n);
@@ -259,8 +260,17 @@ document.addEventListener("click",function(e){
  if(t.id==="chat-send"){var ci=$("#chat-input");if(ci){processar(ci.value,true);ci.value=""}return}
  if(d.chatCmd){processar(d.chatCmd,true);return}
  if(t.id==="pwa-install-btn"){
-  if(pwaDeferredPrompt){pwaDeferredPrompt.prompt();pwaDeferredPrompt.userChoice.then(function(){pwaDeferredPrompt=null})}
-  var b=$("#pwa-install-banner");if(b)b.hidden=true;return;
+  if(pwaDeferredPrompt){
+   var instBanner=$("#pwa-install-banner");
+   pwaDeferredPrompt.prompt();
+   pwaDeferredPrompt.userChoice.then(function(r){
+    pwaDeferredPrompt=null;
+    if(instBanner)instBanner.hidden=true;
+   });
+  } else {
+   var b=$("#pwa-install-banner");if(b)b.hidden=true;
+  }
+  return;
  }
  if(t.id==="pwa-dismiss-btn"){var b2=$("#pwa-install-banner");if(b2)b2.hidden=true;return}
  if(d.go){e.preventDefault();if(d.go==="back")voltar();else{hist.length=d.go==="home"?0:hist.length;go(d.go)}}
