@@ -81,13 +81,18 @@ public class GeminiLlmClient implements ProvedorLlm {
 
     @Override
     public Intencao interpretar(String texto, int nivelFonte) {
+        return interpretar(texto, nivelFonte, List.of());
+    }
+
+    @Override
+    public Intencao interpretar(String texto, int nivelFonte, List<String> historico) {
         if (apiKey.isBlank()) {
             logger.warn("Chave GEMINI_API_KEY nao configurada. Usando LlmSimulado.");
             return interpretarFallback(texto, nivelFonte);
         }
 
         try {
-            Map<String, Object> payload = montarPayload(texto, nivelFonte);
+            Map<String, Object> payload = montarPayload(texto, nivelFonte, historico);
             String uri = "/models/" + model + ":generateContent?key=" + apiKey;
 
             logger.debug("Chamando Gemini: modelo={}, texto={}", model, texto.substring(0, Math.min(50, texto.length())));
@@ -152,7 +157,7 @@ public class GeminiLlmClient implements ProvedorLlm {
         return new Intencao(local.confianca(), local.chamadas(), local.mensagem(), "Simulado (offline)");
     }
 
-    private Map<String, Object> montarPayload(String texto, int nivelFonte) {
+    private Map<String, Object> montarPayload(String texto, int nivelFonte, List<String> historico) {
         Map<String, Object> systemInstruction = Map.of(
                 "parts", List.of(Map.of(
                         "text", """
@@ -165,6 +170,27 @@ public class GeminiLlmClient implements ProvedorLlm {
                                 - NUNCA aponte erros de português, NUNCA diga que o usuário digitou errado ou que a frase estava estranha.
                                 - Responda sempre em português do Brasil com linguagem simples, clara e sem termos técnicos complicados.
                                 - Use emojis carinhosos e gentis (😊, ❤️, 🌟, 🌸, 👵, 👴, 🏥).
+                                
+                                CATÁLOGO OFICIAL DE SERVIÇOS DE HORTOLÂNDIA/SP:
+                                1. Saúde:
+                                   - UPA 24h Jardim Amanda (Rua Washington Luís, 1.066, Jd. Amanda II - Tel: (19) 3897-4485 - Plantão 24h)
+                                   - UPA 24h Jardim Rosolém (Rua Orlando Pavan, 395, Jd. Rosolém - Tel: (19) 3845-1009 - Plantão 24h)
+                                   - Hospital Municipal Mário Covas (Jardim Mirante - emergências graves e cirurgias)
+                                   - Salas de Vacinação: disponíveis nas 17 UBSs municipais, de segunda a sexta, das 7h30 às 15h30 (Tel geral: (19) 3965-1400)
+                                   - Agendamento de Consultas/Exames: presencialmente na sua UBS de referência do bairro com Cartão SUS e RG
+                                2. Lazer e Convivência:
+                                   - CCMI (Centro de Convivência da Melhor Idade): Rua Pevide, 126, Remanso Campineiro e unidade no Jd. Amanda (dança, ginástica, artesanato, coral e passeios - Tel: (19) 3819-3938)
+                                   - Cartão Bem Idoso e Transporte Gratuito: gratuidade a partir de 60 anos no transporte coletivo municipal e a partir de 65 anos intermunicipal
+                                3. Direitos e Assistência Social:
+                                   - CRAS (Jd. Amanda, Jd. Rosolém, Jd. Santa Clara, Jd. Primavera e Jd. Brasil): orientação para BPC/LOAS, Cadastro Único e benefícios
+                                   - Credencial de Estacionamento para Idosos: emitida gratuitamente pelo Poupatempo ou setor de trânsito
+                                4. Telefones de Emergência:
+                                   - SAMU: 192 (ambulância e socorro médico urgente 24h)
+                                   - Bombeiros: 193 (incêndio, resgate e acidentes)
+                                   - Polícia Militar: 190 (segurança pública)
+                                   - Guarda Municipal de Hortolândia: 153
+                                   - Defesa Civil de Hortolândia: 199 (desabamentos, alagamentos)
+                                   - Disque 100: denúncias de violência e violação de direitos da pessoa idosa
                                 
                                 COMPREENSÃO AVANÇADA DE ERROS DE DIGITAÇÃO E ESCRITA:
                                 Pessoas idosas costumam digitar com dedos trêmulos, pouca familiaridade com celular, letras trocadas, grafia fonética ou sem pontuação.
@@ -181,24 +207,30 @@ public class GeminiLlmClient implements ProvedorLlm {
                                   * "le pra mim", "le em voz alta", "fala o que ta escrito" → acione executarLeituraVoz(idSecao).
                                   * "volta pro inicio", "começo", "pagina inicial", "tela principal" → acione navegarParaSecao("home").
                                 
-                                CONHECIMENTOS QUE VOCÊ DOMINA:
-                                - Saudações diárias, bate-papo afetuoso, dicas de bem-estar (caminhada leve, hidratação, sono regular).
-                                - Orientações seguras de saúde: lembrar de nunca tomar remédio sem receita e procurar a UBS do bairro.
-                                - Proteção contra golpes de WhatsApp e telefone (nunca passar senhas ou dados bancários).
-                                - Serviços de Hortolândia: UBSs, UPAs 24h, Hospital Municipal Mário Covas, CRAS e o CCMI.
-                                
                                 REGRAS DE RETORNO:
                                 - Se o pedido for para navegar ou ajustar a tela, inclua as ferramentas apropriadas em "chamadas" e dê uma resposta afetuosa em "mensagem".
                                 - Para qualquer pergunta, dúvida, desabafo ou conversa: retorne sempre confianca >= 0.90, "chamadas": [], e uma mensagem calorosa, acolhedora e informativa.
-                                - Nível da fonte atual informado pelo sistema: respeite o limite de -2 a +4.
+                                - Considere o histórico de mensagens anteriores para entender pronomes ("e lá?", "qual o telefone dele?", "e para fazer isso?").
                                 """
                 ))
         );
 
+        StringBuilder promptFinal = new StringBuilder();
+        if (historico != null && !historico.isEmpty()) {
+            promptFinal.append("--- HISTÓRICO DE MENSAGENS RECENTES NA CONVERSA ---\n");
+            for (String h : historico) {
+                if (h != null && !h.isBlank()) {
+                    promptFinal.append(h.trim()).append("\n");
+                }
+            }
+            promptFinal.append("----------------------------------------------------\n\n");
+        }
+        promptFinal.append("MENSAGEM ATUAL DO IDOSO:\n").append(texto);
+        promptFinal.append("\n\nNível atual da fonte na tela: ").append(nivelFonte).append(". Limite: -2 a +4.");
+
         Map<String, Object> userContent = Map.of(
                 "role", "user",
-                "parts", List.of(Map.of("text", texto + "\nNível atual da fonte: " + nivelFonte
-                        + ". Limite: -2 a +4."))
+                "parts", List.of(Map.of("text", promptFinal.toString()))
         );
 
         Map<String, Object> responseSchema = Map.of(

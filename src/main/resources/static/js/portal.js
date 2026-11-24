@@ -25,9 +25,24 @@ function ic(n){
  return '<span class="ms" aria-hidden="true">'+(mapa[n]||"•")+'</span>'
 }
 
-/* ---------- Voz ---------- */
-function falar(t){var s=$("#status");if(!("speechSynthesis" in window)){if(s)s.textContent="Seu navegador não lê em voz alta. O texto está na tela.";return false}
- speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang="pt-BR";u.rate=.9;speechSynthesis.speak(u);return true}
+/* ---------- Feedback Háptico (Vibração no Celular) ---------- */
+function vibrar(ms){
+ if("vibrate" in navigator){
+  try{ navigator.vibrate(ms||40); }catch(e){}
+ }
+}
+
+/* ---------- Voz Acolhedora e Pausada (0.88x) ---------- */
+function falar(t){
+ var s=$("#status");if(!("speechSynthesis" in window)){if(s)s.textContent="Seu navegador não lê em voz alta. O texto está na tela.";return false}
+ speechSynthesis.cancel();
+ var u=new SpeechSynthesisUtterance(t);
+ u.lang="pt-BR";
+ u.rate=0.88; // Ritmo pausado e dicção calma para idosos
+ u.pitch=1.0;
+ speechSynthesis.speak(u);
+ return true;
+}
 
 /* ---------- Dados (vêm do servidor Java) ---------- */
 var CATALOGO=window.PMI_CATALOGO||{secoes:[],emergencias:[]};
@@ -149,7 +164,7 @@ function say(m){var s=$("#status");if(s)s.textContent=m}
 function fa01(m){say(m);var f=$("#fa01");if(f)f.hidden=false;falar("Não entendi com certeza. Escolha uma das opções na tela.");addChatMsg(m||"Não entendi com certeza. Escolha uma das opções abaixo.",false)}
 
 /* Adiciona balão de mensagem ao chat flutuante */
-function addChatMsg(texto,isUser,audioMsg){
+function addChatMsg(texto,isUser,audioMsg,isEmergency){
  var msgs=$("#chat-msgs");if(!msgs)return;
  var b=document.createElement("div");b.className="chat-bubble "+(isUser?"user":"bot");
  var p=document.createElement("p");p.textContent=texto;b.appendChild(p);
@@ -160,6 +175,13 @@ function addChatMsg(texto,isUser,audioMsg){
   btn.onclick=function(){falar(audioMsg)};
   b.appendChild(btn);
  }
+ if(!isUser&&isEmergency){
+  var emerDiv=document.createElement("div");
+  emerDiv.className="chat-emergency-actions";
+  emerDiv.innerHTML='<a href="tel:192" class="chat-call-btn samu" aria-label="Ligar para o SAMU no 192">📞 Ligar 192 (SAMU)</a>'+
+                    '<a href="tel:193" class="chat-call-btn bombeiros" aria-label="Ligar para os Bombeiros no 193">🚒 Ligar 193 (Bombeiros)</a>';
+  b.appendChild(emerDiv);
+ }
  msgs.appendChild(b);msgs.scrollTop=msgs.scrollHeight;
 }
 
@@ -167,6 +189,7 @@ function toggleChat(abrir){
  var m=$("#chat-modal"),f=$("#fab-chat"),bk=$("#chat-backdrop");if(!m)return;
  var show=typeof abrir==="boolean"?abrir:m.hidden;
  m.hidden=!show;
+ vibrar(30);
  if(bk)bk.hidden=!show;
  if(f){
   f.setAttribute("aria-expanded",String(show));
@@ -181,20 +204,32 @@ function toggleChat(abrir){
  }
 }
 
+var historicoChat=[];
+
 function processar(txt,fromChat){
  txt=(txt||"").trim();if(!txt)return;
+ vibrar(35);
  var f=$("#fa01");if(f)f.hidden=true;
  logar('> "'+txt+'"');
  addChatMsg(txt,true);
+ historicoChat.push("Idoso: " + txt);
+ if(historicoChat.length > 6) historicoChat.shift();
+
  var msgs=$("#chat-msgs");
  var typ=document.createElement("div");typ.id="chat-typing";typ.className="chat-bubble bot chat-typing";
  typ.innerHTML='<span class="dot"></span><span class="dot"></span><span class="dot"></span> <span>Pensando…</span>';
  if(msgs){msgs.appendChild(typ);msgs.scrollTop=msgs.scrollHeight}
  var badge=$("#chat-badge");if(badge)badge.textContent="✦ Pensando…";
  var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort()},14000); /* 14 s para acomodar IA */
- fetch("/api/agente",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto:txt,nivelFonte:st.size}),signal:ctrl.signal})
+ fetch("/api/agente",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({texto:txt,nivelFonte:st.size,historico:historicoChat}),
+  signal:ctrl.signal
+ })
  .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
  .then(function(resp){clearTimeout(timer);
+  vibrar(45);
   var tEl=$("#chat-typing");if(tEl)tEl.remove();
   var isGemini=resp.origem&&resp.origem.toLowerCase().indexOf("gemini")>-1;
   if(badge)badge.textContent=isGemini?"✦ Google Gemini IA":"✦ Assistente Oficial";
@@ -208,18 +243,27 @@ function processar(txt,fromChat){
   (resp.bloqueadas||[]).forEach(function(b){logar("  ✗ bloqueada no servidor: "+b)});
   var n=0;
   var navegou=false;
+  var isEmerg=false;
   (resp.chamadas||[]).forEach(function(c){
    var e=permitida(c);if(e){logar("  ✗ "+JSON.stringify(c)+" bloqueada: "+e);return}
    var res=TOOLS[c.name](c.arguments);logar("  ✓ "+JSON.stringify(c)+" → "+JSON.stringify(res));n++;
    if(c.name==="navegarParaSecao"&&res&&res.sucesso){
-    navegou=true;
+    if(c.arguments&&c.arguments.idSecao==="emergencia") isEmerg=true;
+    else navegou=true;
    }
   });
+  var txtLower=txt.toLowerCase();
+  if(txtLower.indexOf("socorr")>-1||txtLower.indexOf("emergenc")>-1||txtLower.indexOf("samu")>-1||txtLower.indexOf("passando mal")>-1||txtLower.indexOf("caiu")>-1){
+   isEmerg=true;
+  }
   var textoFinal = msgSrv || (n ? "Pronto! Ação realizada." : "Não consegui fazer essa ação.");
+  historicoChat.push("Assistente: " + textoFinal);
+  if(historicoChat.length > 6) historicoChat.shift();
+
   say(textoFinal);
-  addChatMsg(textoFinal,false,textoFinal);
+  addChatMsg(textoFinal,false,textoFinal,isEmerg);
   falar(textoFinal);
-  if(navegou){
+  if(navegou && !isEmerg){
    setTimeout(function(){
     toggleChat(false);
    }, 900);
@@ -239,6 +283,7 @@ function ligaMic(btnId,inputElId){
  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,m=$(btnId);if(!m||!SR)return;
  m.style.display="";
  m.onclick=function(){
+  vibrar(40);
   var banner=$("#chat-recording-banner");
   if(m.classList.contains("recording")){
    if(micRecognition){try{micRecognition.stop()}catch(e){}}

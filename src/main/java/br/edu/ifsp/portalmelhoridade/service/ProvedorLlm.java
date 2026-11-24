@@ -38,4 +38,9 @@ public interface ProvedorLlm {
     default Intencao interpretar(String texto, int nivelFonte) {
         return interpretar(texto);
     }
+
+    /** Permite ao provedor considerar histórico de mensagens recentes para contexto contínuo. */
+    default Intencao interpretar(String texto, int nivelFonte, List<String> historico) {
+        return interpretar(texto, nivelFonte);
+    }
 }

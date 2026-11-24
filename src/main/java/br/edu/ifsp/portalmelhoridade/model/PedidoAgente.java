@@ -1,4 +1,10 @@
 package br.edu.ifsp.portalmelhoridade.model;
 
-/** Comando do usuário (texto ou voz já transcrita) e o estado atual da fonte. */
-public record PedidoAgente(String texto, int nivelFonte) { }
+import java.util.List;
+
+/** Comando do usuário (texto ou voz já transcrita), estado da fonte e histórico recente. */
+public record PedidoAgente(String texto, int nivelFonte, List<String> historico) {
+    public PedidoAgente(String texto, int nivelFonte) {
+        this(texto, nivelFonte, List.of());
+    }
+}

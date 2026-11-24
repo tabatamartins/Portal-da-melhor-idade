@@ -36,7 +36,8 @@ public class AgenteService {
 
         int nivel = Math.max(ValidadorTools.FONTE_MIN,
                 Math.min(ValidadorTools.FONTE_MAX, pedido.nivelFonte()));
-        ProvedorLlm.Intencao intencao = llm.interpretar(texto, nivel);
+        List<String> hist = pedido.historico() != null ? pedido.historico() : List.of();
+        ProvedorLlm.Intencao intencao = llm.interpretar(texto, nivel, hist);
         
         if (intencao == null || intencao.confianca() < LIMIAR_CONFIANCA) {
             double conf = intencao != null ? intencao.confianca() : 0.0;
