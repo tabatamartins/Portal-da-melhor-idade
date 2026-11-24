@@ -350,20 +350,33 @@ if("serviceWorker" in navigator){
  });
 }
 var pwaDeferredPrompt=null;
-// Esconde o banner automaticamente se o app já foi instalado (modo standalone/PWA)
-if(window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true){
- var _b=$("#pwa-install-banner");if(_b)_b.hidden=true;
+function escondeBannerPWA(){
+ var b=$("#pwa-install-banner");
+ if(b){
+  b.hidden=true;
+  b.style.display="none";
+ }
 }
+
+// Se o app já foi instalado ou está em modo standalone, esconde permanentemente
+if(localStorage.getItem("pmi_app_instalado")==="true"||window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true){
+ localStorage.setItem("pmi_app_instalado","true");
+ escondeBannerPWA();
+}
+
 window.addEventListener("beforeinstallprompt",function(e){
  e.preventDefault();pwaDeferredPrompt=e;
- // Só mostra se não estiver em modo standalone
- if(!window.matchMedia("(display-mode: standalone)").matches&&window.navigator.standalone!==true){
-  var banner=$("#pwa-install-banner");if(banner)banner.hidden=false;
+ if(localStorage.getItem("pmi_app_instalado")==="true"||window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true){
+  escondeBannerPWA();
+  return;
  }
+ var banner=$("#pwa-install-banner");if(banner)banner.hidden=false;
 });
-// Quando instalado com sucesso, esconde o banner permanentemente
+
+// Quando instalado com sucesso, salva no localStorage e esconde o banner permanentemente
 window.addEventListener("appinstalled",function(){
- var banner=$("#pwa-install-banner");if(banner)banner.hidden=true;
+ localStorage.setItem("pmi_app_instalado","true");
+ escondeBannerPWA();
  pwaDeferredPrompt=null;
 });
 
@@ -377,18 +390,21 @@ document.addEventListener("click",function(e){
  if(d.chatCmd){processar(d.chatCmd,true);return}
  if(t.id==="pwa-install-btn"){
   if(pwaDeferredPrompt){
-   var instBanner=$("#pwa-install-banner");
    pwaDeferredPrompt.prompt();
    pwaDeferredPrompt.userChoice.then(function(r){
+    if(r&&r.outcome==="accepted"){
+     localStorage.setItem("pmi_app_instalado","true");
+    }
     pwaDeferredPrompt=null;
-    if(instBanner)instBanner.hidden=true;
+    escondeBannerPWA();
    });
   } else {
-   var b=$("#pwa-install-banner");if(b)b.hidden=true;
+   localStorage.setItem("pmi_app_instalado","true");
+   escondeBannerPWA();
   }
   return;
  }
- if(t.id==="pwa-dismiss-btn"){var b2=$("#pwa-install-banner");if(b2)b2.hidden=true;return}
+ if(t.id==="pwa-dismiss-btn"){escondeBannerPWA();return}
  if(d.go){e.preventDefault();if(d.go==="back")voltar();else{hist.length=d.go==="home"?0:hist.length;go(d.go)}}
  else if(d.det){var p=d.det.split(":");go("det",p[0],+p[1])}
  else if(d.a)ajusta(d.a);
