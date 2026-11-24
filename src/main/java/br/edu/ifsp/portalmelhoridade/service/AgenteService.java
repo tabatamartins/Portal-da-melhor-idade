@@ -83,6 +83,6 @@ public class AgenteService {
     }
 
     private RespostaAgente fa01(double confianca, String mensagem) {
-        return new RespostaAgente(confianca, true, List.of(), List.of(), mensagem, "não identificado");
+        return new RespostaAgente(confianca, true, List.of(), List.of(), mensagem, "Assistente");
     }
 }

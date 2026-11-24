@@ -105,7 +105,7 @@ public class LlmSimulado implements ProvedorLlm {
         }
 
         // Saudações acolhedoras
-        if (t.matches("^(oi|ola|bom dia|boa tarde|boa noite|e ai|tudo bem|opa|alo)(\\s.*)?$")) {
+        if (t.matches(".*\\b(oi|ola|bom dia|boa tarde|boa noite|e ai|tudo bem|opa|alo)\\b.*")) {
             return new Intencao(0.95, List.of(), "Olá! Tudo bem? Sou seu assistente do Portal da Melhor Idade de Hortolândia. Como posso te ajudar hoje? Posso mostrar postos de saúde, direitos, atividades de lazer e telefones úteis.");
         }
 
@@ -115,7 +115,7 @@ public class LlmSimulado implements ProvedorLlm {
         }
 
         // Agradecimentos
-        if (t.matches("^(obrigado|obrigada|valeu|muito obrigado|muito obrigada|agradeco)(\\s.*)?$")) {
+        if (t.matches(".*\\b(obrigado|obrigada|valeu|muito obrigado|muito obrigada|agradeco)\\b.*")) {
             return new Intencao(0.95, List.of(), "De nada! Fico muito feliz em ajudar. Se precisar de mais alguma informação de Hortolândia, é só me chamar!");
         }
 
@@ -229,10 +229,11 @@ public class LlmSimulado implements ProvedorLlm {
         return resultado;
     }
 
-    /** Remove acentos, converte para minúsculas e normaliza espaços. */
+    /** Remove acentos, pontuação, converte para minúsculas e normaliza espaços. */
     static String normalizar(String s) {
         String semAcento = Normalizer.normalize(s == null ? "" : s, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "");
-        return semAcento.toLowerCase().replaceAll("\\s+", " ").trim();
+        String limpo = semAcento.toLowerCase().replaceAll("[^a-z0-9\\s]", " ");
+        return limpo.replaceAll("\\s+", " ").trim();
     }
 }
