@@ -366,6 +366,33 @@ public class LlmSimulado implements ProvedorLlm {
         String semAcento = Normalizer.normalize(s == null ? "" : s, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "");
         String limpo = semAcento.toLowerCase().replaceAll("[^a-z0-9\\s]", " ");
+        // Reduz letras repetidas 3+ vezes para 1 (ex: "poooosto" -> "posto", "ajudaaa" -> "ajuda")
+        limpo = limpo.replaceAll("([a-z])\\1{2,}", "$1");
+
+        // Normalização fonética e correção de erros comuns de digitação de idosos
+        limpo = (" " + limpo + " ")
+                .replaceAll("\\bnum\\s+to\\b", "nao estou")
+                .replaceAll("\\bnao\\s+to\\b", "nao estou")
+                .replaceAll("\\bta\\b", "esta")
+                .replaceAll("\\bto\\b", "estou")
+                .replaceAll("\\bmt[o]?\\b", "muito")
+                .replaceAll("\\bqr[o]?\\b", "quero")
+                .replaceAll("\\bvr\\b", "ver")
+                .replaceAll("\\bpq\\b", "porque")
+                .replaceAll("\\b(kd|cade)\\b", "onde esta")
+                .replaceAll("\\bfika\\b", "fica")
+                .replaceAll("\\b(possto|postu|psto)\\b", "posto")
+                .replaceAll("\\b(onbus|onibs|omibus)\\b", "onibus")
+                .replaceAll("\\b(remedyo|remedo)\\b", "remedio")
+                .replaceAll("\\b(vassina|vacinaa)\\b", "vacina")
+                .replaceAll("\\b(direitu|direto)\\b", "direito")
+                .replaceAll("\\bsocoro\\b", "socorro")
+                .replaceAll("\\bpolica\\b", "policia")
+                .replaceAll("\\bbombero\\b", "bombeiro")
+                .replaceAll("\\bhospitau\\b", "hospital")
+                .replaceAll("\\bajuda\\s+eu\\b", "me ajuda")
+                .replaceAll("\\b(faso|fasso)\\b", "faco");
+
         return limpo.replaceAll("\\s+", " ").trim();
     }
 }
