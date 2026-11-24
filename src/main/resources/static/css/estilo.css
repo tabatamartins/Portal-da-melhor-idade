@@ -955,17 +955,25 @@ html[data-contrast="alto"] .team-card.destaque {
   opacity: 0.75;
 }
 .chat-bubble.bot {
-  background: var(--su, #e8f5e9);
-  color: var(--tx);
+  background: var(--card);
+  color: var(--fg);
+  border: 1.5px solid var(--bd);
   align-self: flex-start;
   border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.chat-bubble.bot p {
+  color: var(--fg);
 }
 .chat-bubble.user {
   background: var(--pri);
   color: var(--onpri);
   align-self: flex-end;
   border-bottom-right-radius: 4px;
-  text-align: right;
+  text-align: left;
+}
+.chat-bubble.user p {
+  color: var(--onpri);
 }
 
 /* Indicador de digitação */
@@ -988,16 +996,21 @@ html[data-contrast="alto"] .team-card.destaque {
 
 /* Botão de áudio na mensagem */
 .chat-audio-btn {
-  background: none;
-  border: none;
+  background: var(--bg);
+  border: 1.5px solid var(--bd);
+  border-radius: 12px;
+  color: var(--fg);
+  font-weight: 700;
   cursor: pointer;
-  font-size: 1rem;
-  padding: 2px 4px;
-  opacity: 0.7;
-  display: inline-block;
-  vertical-align: middle;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.9;
 }
-.chat-audio-btn:hover { opacity: 1; }
+.chat-audio-btn:hover { opacity: 1; border-color: var(--pri); }
 
 /* ========== Botões de Ação Direta de Emergência ========== */
 .chat-emergency-actions {
@@ -1273,6 +1286,13 @@ html[data-contrast="alto"] .chat-bubble.bot {
   background: #000;
   border-color: #ffe600;
   color: #fff;
+}
+html[data-contrast="alto"] .chat-bubble.bot p {
+  color: #fff;
+}
+html[data-contrast="alto"] .chat-audio-btn {
+  color: #ffe600;
+  border-color: #ffe600;
 }
 
 html[data-contrast="alto"] .chat-bubble.user {
