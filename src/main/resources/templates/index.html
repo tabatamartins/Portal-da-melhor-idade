@@ -80,8 +80,17 @@
       <button class="chat-chip" data-chat-cmd="Quero ver opções de transporte e lazer">🚌 Lazer e Ônibus</button>
     </div>
     
+    <!-- Banner Visual de Gravação de Áudio -->
+    <div id="chat-recording-banner" class="chat-recording-banner" hidden aria-live="assertive">
+      <div class="recording-indicator">
+        <span class="rec-dot"></span>
+        <span class="rec-text">Gravando áudio… Fale agora!</span>
+      </div>
+      <button id="rec-cancel-btn" type="button" class="rec-cancel-btn" aria-label="Cancelar gravação">Cancelar</button>
+    </div>
+
     <div class="chat-input-bar">
-      <input type="text" id="chat-input" placeholder="Digite ou fale aqui…" aria-label="Mensagem para o assistente" autocomplete="off">
+      <input type="text" id="chat-input" placeholder="Escreva ou fale aqui…" aria-label="Mensagem para o assistente" autocomplete="off">
       <button id="chat-mic" class="chat-icon-btn" aria-label="Falar pelo microfone" title="Falar">🎙️</button>
       <button id="chat-send" class="chat-send-btn" aria-label="Enviar mensagem">Enviar</button>
     </div>

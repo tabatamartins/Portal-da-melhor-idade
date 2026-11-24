@@ -18,7 +18,7 @@ import java.util.Optional;
 public class AgenteService {
 
     public static final double LIMIAR_CONFIANCA = 0.80;
-    private static final int MAX_TEXTO = 300;
+    private static final int MAX_TEXTO = 1000;
 
     private final ProvedorLlm llm;
     private final ValidadorTools validador;

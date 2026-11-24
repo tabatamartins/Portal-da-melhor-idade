@@ -168,24 +168,30 @@ function toggleChat(abrir){
  var show=typeof abrir==="boolean"?abrir:m.hidden;
  m.hidden=!show;
  if(bk)bk.hidden=!show;
- if(f)f.setAttribute("aria-expanded",String(show));
+ if(f){
+  f.setAttribute("aria-expanded",String(show));
+  f.style.display=show?"none":"";
+ }
  if(show){
-  var inp=$("#chat-input");if(inp)inp.focus();
+  document.body.classList.add("chat-open");
+  var inp=$("#chat-input");if(inp)setTimeout(function(){inp.focus()},150);
   var msgs=$("#chat-msgs");if(msgs)msgs.scrollTop=msgs.scrollHeight;
+ } else {
+  document.body.classList.remove("chat-open");
  }
 }
 
 function processar(txt,fromChat){
  txt=(txt||"").trim();if(!txt)return;
  var f=$("#fa01");if(f)f.hidden=true;
- say("Entendi, só um momento…");logar('> "'+txt+'"');
+ logar('> "'+txt+'"');
  addChatMsg(txt,true);
  var msgs=$("#chat-msgs");
  var typ=document.createElement("div");typ.id="chat-typing";typ.className="chat-bubble bot chat-typing";
  typ.innerHTML='<span class="dot"></span><span class="dot"></span><span class="dot"></span> <span>Pensando…</span>';
  if(msgs){msgs.appendChild(typ);msgs.scrollTop=msgs.scrollHeight}
  var badge=$("#chat-badge");if(badge)badge.textContent="✦ Pensando…";
- var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort()},8000); /* RNF03: tempo limite de 8 s */
+ var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort()},14000); /* 14 s para acomodar IA */
  fetch("/api/agente",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto:txt,nivelFonte:st.size}),signal:ctrl.signal})
  .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
  .then(function(resp){clearTimeout(timer);
@@ -214,28 +220,72 @@ function processar(txt,fromChat){
   clearTimeout(timer);
   var tEl=$("#chat-typing");if(tEl)tEl.remove();
   if(badge)badge.textContent="✦ Assistente Conectado";
-  logar("  falha ou tempo esgotado (8 s) → FA01");
+  logar("  falha ou tempo esgotado → FA01");
   fa01("Não consegui falar com o assistente agora. Use as opções abaixo.");
  });
 }
 
+var micRecognition=null;
 function ligaMic(btnId,inputElId){
  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,m=$(btnId);if(!m||!SR)return;
  m.style.display="";
  m.onclick=function(){
+  var banner=$("#chat-recording-banner");
+  if(m.classList.contains("recording")){
+   if(micRecognition){try{micRecognition.stop()}catch(e){}}
+   return;
+  }
   try{
-   var r=new SR();r.lang="pt-BR";
+   var r=new SR();
+   micRecognition=r;
+   r.lang="pt-BR";
+   r.continuous=false;
+   r.interimResults=false;
    m.classList.add("recording");
-   r.onresult=function(e){
+   m.title="Gravando... Toque para concluir";
+   if(banner)banner.hidden=false;
+   var inp=$(inputElId);
+   var oldPlaceholder=inp?inp.placeholder:"";
+   if(inp)inp.placeholder="🔴 Ouvindo... Fale agora!";
+
+   function encerraGravacao(){
     m.classList.remove("recording");
+    m.title="Falar pelo microfone";
+    if(banner)banner.hidden=true;
+    if(inp)inp.placeholder=oldPlaceholder;
+    micRecognition=null;
+   }
+
+   var cancelBtn=$("#rec-cancel-btn");
+   if(cancelBtn){
+    cancelBtn.onclick=function(e){
+     e.stopPropagation();
+     try{r.abort()}catch(err){}
+     encerraGravacao();
+    };
+   }
+
+   r.onresult=function(e){
+    encerraGravacao();
     var t=e.results[0][0].transcript;
-    var inp=$(inputElId);if(inp)inp.value=t;
+    if(inp)inp.value=t;
     processar(t,true);
    };
-   r.onerror=function(){m.classList.remove("recording");say("Não consegui ouvir. Tente digitar.")};
-   r.onend=function(){m.classList.remove("recording")};
-   say("Estou ouvindo…");r.start();
-  }catch(x){m.classList.remove("recording");say("Microfone indisponível.")}
+   r.onerror=function(e){
+    encerraGravacao();
+    if(e.error!=="aborted"&&e.error!=="no-speech"){
+     say("Não consegui ouvir. Tente digitar.");
+    }
+   };
+   r.onend=function(){
+    encerraGravacao();
+   };
+   r.start();
+  }catch(x){
+   m.classList.remove("recording");
+   if(banner)banner.hidden=true;
+   say("Microfone indisponível neste navegador.");
+  }
  };
 }
 
@@ -246,9 +296,21 @@ if("serviceWorker" in navigator){
  });
 }
 var pwaDeferredPrompt=null;
+// Esconde o banner automaticamente se o app já foi instalado (modo standalone/PWA)
+if(window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true){
+ var _b=$("#pwa-install-banner");if(_b)_b.hidden=true;
+}
 window.addEventListener("beforeinstallprompt",function(e){
  e.preventDefault();pwaDeferredPrompt=e;
- var banner=$("#pwa-install-banner");if(banner)banner.hidden=false;
+ // Só mostra se não estiver em modo standalone
+ if(!window.matchMedia("(display-mode: standalone)").matches&&window.navigator.standalone!==true){
+  var banner=$("#pwa-install-banner");if(banner)banner.hidden=false;
+ }
+});
+// Quando instalado com sucesso, esconde o banner permanentemente
+window.addEventListener("appinstalled",function(){
+ var banner=$("#pwa-install-banner");if(banner)banner.hidden=true;
+ pwaDeferredPrompt=null;
 });
 
 /* ---------- Eventos ---------- */
