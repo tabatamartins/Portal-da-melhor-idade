@@ -30,3 +30,7 @@ services:
         fromDatabase:
           name: pmi-db
           property: password
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
