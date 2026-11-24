@@ -1,4 +1,4 @@
-﻿/* Portal da Melhor Idade - Interface acessível para a pessoa idosa em Hortolândia/SP.
+/* Portal da Melhor Idade - Interface acessível para a pessoa idosa em Hortolândia/SP.
    O conteúdo vem do servidor Java (CatalogoService, injetado em window.PMI_CATALOGO).
    O comando do assistente é interpretado e validado no servidor (/api/agente);
    aqui executamos as chamadas autorizadas e gerenciamos síntese de voz, telas e preferências. */
@@ -152,19 +152,29 @@ function ajusta(a){if(a==="menos")st.size=clamp(st.size-1,-2,4);else if(a==="mai
 var TOOLS={
  ajustarFonte:function(a){st.size=clamp(st.size+a.delta,-2,4);apply();save();return{sucesso:true,novoNivelFonte:st.size}},
  alterarContraste:function(a){st.alto=!!a.ativo;apply();save();return{sucesso:true,altoContrasteAtivo:st.alto}},
- navegarParaSecao:function(a){var ok=go(a.idSecao);return{sucesso:ok,secaoAtual:a.idSecao}},
+ navegarParaSecao:function(a){
+  var ok=go(a.idSecao);
+  if(ok && a.idSecao==="busca" && (a.termo||a.q)){
+   var termo=(a.termo||a.q||"").trim();
+   var inp=$("#q");
+   if(inp){ inp.value=termo; }
+   filtrar(termo,"");
+  }
+  return{sucesso:ok,secaoAtual:a.idSecao};
+ },
  executarLeituraVoz:function(a){var d=D[a.idSecao],t=d.t+". "+d.s+" "+(d.it?d.it.map(function(x){return x.t+". "+x.b}).join(" "):d.em.map(function(x){return x[1]+" "+x[2]}).join(". "));return{sucesso:true,status:falar(t)?"lendo":"sem voz"}}};
 /* Defesa em profundidade: mesmo vindo do servidor, o navegador só executa o que está na whitelist. */
 function permitida(c){if(!c||!Object.prototype.hasOwnProperty.call(TOOLS,c.name))return"ferramenta fora da whitelist";var a=c.arguments||{};
  if(c.name==="ajustarFonte"&&!Number.isInteger(a.delta))return"delta inválido";
  if(c.name==="alterarContraste"&&typeof a.ativo!=="boolean")return"parâmetro inválido";
- if((c.name==="navegarParaSecao"||c.name==="executarLeituraVoz")&&!Object.prototype.hasOwnProperty.call(D,a.idSecao))return"seção inexistente";return null}
+ if(c.name==="navegarParaSecao"&&a.idSecao!=="home"&&a.idSecao!=="busca"&&!Object.prototype.hasOwnProperty.call(D,a.idSecao))return"seção inexistente";
+ if(c.name==="executarLeituraVoz"&&!Object.prototype.hasOwnProperty.call(D,a.idSecao))return"seção inexistente";return null}
 function logar(x){LOG=(LOG?LOG+"\n":"")+x;var l=$("#log");if(l){l.textContent=LOG;l.scrollTop=l.scrollHeight}}
 function say(m){var s=$("#status");if(s)s.textContent=m}
 function fa01(m){say(m);var f=$("#fa01");if(f)f.hidden=false;falar("Não entendi com certeza. Escolha uma das opções na tela.");addChatMsg(m||"Não entendi com certeza. Escolha uma das opções abaixo.",false)}
 
 /* Adiciona balão de mensagem ao chat flutuante */
-function addChatMsg(texto,isUser,audioMsg,isEmergency){
+function addChatMsg(texto,isUser,audioMsg,isEmergency,idSecaoNavegacao){
  var msgs=$("#chat-msgs");if(!msgs)return;
  var b=document.createElement("div");b.className="chat-bubble "+(isUser?"user":"bot");
  var p=document.createElement("p");p.textContent=texto;b.appendChild(p);
@@ -174,6 +184,19 @@ function addChatMsg(texto,isUser,audioMsg,isEmergency){
   btn.innerHTML="🔊 Ouvir";
   btn.onclick=function(){falar(audioMsg)};
   b.appendChild(btn);
+ }
+ if(!isUser&&idSecaoNavegacao){
+  var nomesSecoes={saude:"Saúde e Postos",emergencia:"Telefones de Emergência",direitos:"Direitos e Benefícios",lazer:"Transporte e Lazer",home:"Página Inicial",busca:"Busca de Serviços"};
+  var nomeSec=nomesSecoes[idSecaoNavegacao]||idSecaoNavegacao;
+  var navBtn=document.createElement("button");
+  navBtn.className="chat-nav-btn";
+  navBtn.setAttribute("aria-label","Ver "+nomeSec+" na tela inteira");
+  navBtn.innerHTML="📱 Ver "+nomeSec+" na tela";
+  navBtn.onclick=function(){
+   go(idSecaoNavegacao);
+   toggleChat(false);
+  };
+  b.appendChild(navBtn);
  }
  if(!isUser&&isEmergency){
   var emerDiv=document.createElement("div");
@@ -242,14 +265,14 @@ function processar(txt,fromChat){
   }
   (resp.bloqueadas||[]).forEach(function(b){logar("  ✗ bloqueada no servidor: "+b)});
   var n=0;
-  var navegou=false;
+  var secaoNavegada=null;
   var isEmerg=false;
   (resp.chamadas||[]).forEach(function(c){
    var e=permitida(c);if(e){logar("  ✗ "+JSON.stringify(c)+" bloqueada: "+e);return}
    var res=TOOLS[c.name](c.arguments);logar("  ✓ "+JSON.stringify(c)+" → "+JSON.stringify(res));n++;
    if(c.name==="navegarParaSecao"&&res&&res.sucesso){
-    if(c.arguments&&c.arguments.idSecao==="emergencia") isEmerg=true;
-    else navegou=true;
+    secaoNavegada=c.arguments?c.arguments.idSecao:null;
+    if(secaoNavegada==="emergencia") isEmerg=true;
    }
   });
   var txtLower=txt.toLowerCase();
@@ -261,12 +284,12 @@ function processar(txt,fromChat){
   if(historicoChat.length > 6) historicoChat.shift();
 
   say(textoFinal);
-  addChatMsg(textoFinal,false,textoFinal,isEmerg);
+  addChatMsg(textoFinal,false,textoFinal,isEmerg,secaoNavegada);
   falar(textoFinal);
-  if(navegou && !isEmerg){
+  if(secaoNavegada){
    setTimeout(function(){
     toggleChat(false);
-   }, 900);
+   }, 1100);
   }
  })
  .catch(function(){

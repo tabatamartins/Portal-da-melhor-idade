@@ -16,7 +16,7 @@ public class ValidadorTools {
 
     public static final int FONTE_MIN = -2;
     public static final int FONTE_MAX = 4;
-    public static final Set<String> SECOES = Set.of("saude", "direitos", "emergencia", "lazer");
+    public static final Set<String> SECOES = Set.of("saude", "direitos", "emergencia", "lazer", "home", "busca");
     private static final Set<String> WHITELIST = Set.of(
             "ajustarFonte", "alterarContraste", "navegarParaSecao", "executarLeituraVoz");
 

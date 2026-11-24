@@ -198,7 +198,8 @@ public class GeminiLlmClient implements ProvedorLlm {
                                 - Saúde / Remédios / Postos: "psto", "possto", "postu", "remedyo", "remedo", "remedio de pressao", "farmasya", "vassina", "vacin", "doutor", "medco", "consulta", "exami", "upa amanda", "upa rosolem", "hospital mario covas" → acione navegarParaSecao("saude").
                                 - Lazer / Transporte: "onbus", "onibs", "omibus", "trasporte", "passe livri", "cartao do idoso", "bem idoso", "ccmi", "danca", "ginasteca", "alongamento", "artesanato", "clube da melhor idade", "passeio" → acione navegarParaSecao("lazer").
                                 - Direitos / Benefícios: "direto", "direitu", "estatuto", "apocentadoria", "inss", "beneficio", "bpc", "loas", "cras amanda", "cras rosolem", "vaga idoso", "estacionamento", "carteirinha" → acione navegarParaSecao("direitos").
-                                - Emergência / Socorro: "socoro", "socorro", "ajuda urgente", "samu", "ambulancia", "polica", "bombeiro", "bombero", "defesa civil", "passando mal", "caiu", "machucou", "disque 100", "violencia" → acione navegarParaSecao("emergencia").
+                                - Emergência / Socorro / Telefones: "quero ver os telefones de emergencia", "telefones de emergencia", "socoro", "socorro", "ajuda urgente", "samu", "ambulancia", "polica", "bombeiro", "bombero", "defesa civil", "passando mal", "caiu", "machucou", "disque 100", "violencia" → acione navegarParaSecao("emergencia").
+                                - Busca / Pesquisa: "pesquisar", "buscar", "procurar", "achar servico" → se for tema específico, acione a seção correspondente; se for busca geral, acione navegarParaSecao("busca").
                                 - Acessibilidade na tela:
                                   * "aumenta letra", "letra grandi", "num to veno", "num to enxergando", "letra miuda", "fica maior", "nao consigo ler" → acione ajustarFonte(delta: 1 ou 2).
                                   * "diminui letra", "letra mto grande", "menor", "letra gigante" → acione ajustarFonte(delta: -1 ou -2).
@@ -208,7 +209,7 @@ public class GeminiLlmClient implements ProvedorLlm {
                                   * "volta pro inicio", "começo", "pagina inicial", "tela principal" → acione navegarParaSecao("home").
                                 
                                 REGRAS DE RETORNO:
-                                - Se o pedido for para navegar ou ajustar a tela, inclua as ferramentas apropriadas em "chamadas" e dê uma resposta afetuosa em "mensagem".
+                                - Se o pedido for para navegar, ver telefones, ver postos, ver serviços, buscar ou ajustar a tela, inclua SEMPRE as ferramentas apropriadas ("navegarParaSecao", "ajustarFonte", "alterarContraste", "executarLeituraVoz") em "chamadas" e dê uma resposta afetuosa em "mensagem".
                                 - Para qualquer pergunta, dúvida, desabafo ou conversa: retorne sempre confianca >= 0.90, "chamadas": [], e uma mensagem calorosa, acolhedora e informativa.
                                 - Considere o histórico de mensagens anteriores para entender pronomes ("e lá?", "qual o telefone dele?", "e para fazer isso?").
                                 """

@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --page: #e9e4d4;
   --bg: #FFFDF7;
   --fg: #17252A;
@@ -1025,6 +1025,28 @@ html[data-contrast="alto"] .team-card.destaque {
 }
 .chat-audio-btn:hover { opacity: 1; border-color: var(--pri); }
 
+/* Botão para abrir tela navegada pelo assistente */
+.chat-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  background: var(--pri);
+  color: var(--onpri) !important;
+  border: 2px solid var(--hi);
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: transform .1s ease, filter .1s ease;
+}
+.chat-nav-btn:hover, .chat-nav-btn:focus-visible {
+  filter: brightness(1.12);
+  transform: scale(1.03);
+}
+
 /* ========== Botões de Ação Direta de Emergência ========== */
 .chat-emergency-actions {
   display: flex;
@@ -1303,6 +1325,7 @@ html[data-contrast="alto"] .chat-bubble.bot {
 html[data-contrast="alto"] .chat-bubble.bot p {
   color: #fff;
 }
+html[data-contrast="alto"] .chat-nav-btn { background: #000; border-color: #ffe600; color: #ffe600 !important; }
 html[data-contrast="alto"] .chat-audio-btn {
   color: #ffe600;
   border-color: #ffe600;

@@ -58,11 +58,16 @@ public class LlmSimulado implements ProvedorLlm {
             "acidente|mal estar|mal.?me.?sinto|passando mal|dor no peito|caiu|queda|desmai|" +
             "chama.*socorro|ligo.*policia|\\b192\\b|\\b193\\b|\\b190\\b|\\b199\\b|\\b100\\b");
 
+    private static final Pattern SEC_BUSCA = Pattern.compile(
+            "\\b(pesquis|busc|procur|encontr)\\b");
+
     private static final Map<String, String> MENSAGEM_SEC = Map.of(
             "saude",      "Abrindo Saúde com postos, UPAs e serviços de Hortolândia! 🏥",
             "direitos",   "Abrindo Direitos e Assistência Social — CRAS, BPC e benefícios. ⚖️",
             "emergencia", "Abrindo Emergências. Se for urgência, ligue direto pelo número na tela! 🚨",
-            "lazer",      "Abrindo Lazer e Transporte — atividades do CCMI e gratuidade de ônibus. 🎉"
+            "lazer",      "Abrindo Lazer e Transporte — atividades do CCMI e gratuidade de ônibus. 🎉",
+            "busca",      "Abrindo a Busca de Serviços do Portal! 🔍",
+            "home",       "Voltando para a página inicial do Portal! 🏠"
     );
 
     @Override
@@ -359,6 +364,7 @@ public class LlmSimulado implements ProvedorLlm {
         if (SEC_LAZER.matcher(t).find()) resultado.add("lazer");
         if (SEC_SAUDE.matcher(t).find()) resultado.add("saude");
         if (SEC_DIREITOS.matcher(t).find()) resultado.add("direitos");
+        if (resultado.isEmpty() && SEC_BUSCA.matcher(t).find()) resultado.add("busca");
         return resultado;
     }
 
