@@ -217,7 +217,7 @@ function processar(txt,fromChat){
 
  var msgs=$("#chat-msgs");
  var typ=document.createElement("div");typ.id="chat-typing";typ.className="chat-bubble bot chat-typing";
- typ.innerHTML='<span class="dot"></span><span class="dot"></span><span class="dot"></span> <span>Pensando…</span>';
+ typ.innerHTML='<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="typing-text">Pensando…</span>';
  if(msgs){msgs.appendChild(typ);msgs.scrollTop=msgs.scrollHeight}
  var badge=$("#chat-badge");if(badge)badge.textContent="✦ Pensando…";
  var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort()},14000); /* 14 s para acomodar IA */

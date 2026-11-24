@@ -978,21 +978,34 @@ html[data-contrast="alto"] .team-card.destaque {
 
 /* Indicador de digitação */
 .chat-typing {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 12px 16px;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--card);
+  color: var(--fg);
+  border: 1.5px solid var(--bd);
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
 }
-.chat-typing span {
-  width: 8px; height: 8px;
-  background: var(--sec, #145A64);
+.chat-typing .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--pri);
   border-radius: 50%;
-  animation: bounce .9s infinite;
+  animation: bounceDot .8s infinite alternate;
   display: inline-block;
 }
-.chat-typing span:nth-child(2) { animation-delay: .15s; }
-.chat-typing span:nth-child(3) { animation-delay: .3s; }
-@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+.chat-typing .dot:nth-child(2) { animation-delay: .15s; }
+.chat-typing .dot:nth-child(3) { animation-delay: .3s; }
+@keyframes bounceDot { 0%{opacity:.3;transform:translateY(0)} 100%{opacity:1;transform:translateY(-5px)} }
+
+.chat-typing .typing-text {
+  font-size: 0.92rem;
+  color: var(--fg);
+  margin-left: 4px;
+  font-weight: 600;
+}
 
 /* Botão de áudio na mensagem */
 .chat-audio-btn {
@@ -1293,6 +1306,17 @@ html[data-contrast="alto"] .chat-bubble.bot p {
 html[data-contrast="alto"] .chat-audio-btn {
   color: #ffe600;
   border-color: #ffe600;
+}
+html[data-contrast="alto"] .chat-typing {
+  background: #000;
+  border-color: #ffe600;
+  color: #ffe600;
+}
+html[data-contrast="alto"] .chat-typing .dot {
+  background: #ffe600;
+}
+html[data-contrast="alto"] .chat-typing .typing-text {
+  color: #ffe600;
 }
 
 html[data-contrast="alto"] .chat-bubble.user {
