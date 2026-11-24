@@ -1,5 +1,5 @@
 /* Service Worker para PWA do Portal da Melhor Idade - Hortolândia */
-const CACHE_NAME = 'pmi-cache-v1';
+const CACHE_NAME = 'pmi-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/css/estilo.css',

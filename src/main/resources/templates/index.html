@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" th:href="@{/img/icon-192.png}">
 <link rel="icon" type="image/png" th:href="@{/img/icon-192.png}">
 
-<link rel="stylesheet" th:href="@{/css/estilo.css}">
+<link rel="stylesheet" th:href="@{/css/estilo.css?v=2.1}">
 </head>
 <body>
 <div class="phone">
@@ -99,6 +99,6 @@
 
 <!-- Conteúdo do CatalogoService, entregue à interface como JSON. -->
 <script th:inline="javascript">window.PMI_CATALOGO = /*[[${catalogo}]]*/ {secoes: [], emergencias: []};</script>
-<script th:src="@{/js/portal.js}"></script>
+<script th:src="@{/js/portal.js?v=2.1}"></script>
 </body>
 </html>
