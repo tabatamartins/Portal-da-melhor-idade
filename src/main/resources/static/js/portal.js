@@ -207,14 +207,23 @@ function processar(txt,fromChat){
   }
   (resp.bloqueadas||[]).forEach(function(b){logar("  ✗ bloqueada no servidor: "+b)});
   var n=0;
+  var navegou=false;
   (resp.chamadas||[]).forEach(function(c){
    var e=permitida(c);if(e){logar("  ✗ "+JSON.stringify(c)+" bloqueada: "+e);return}
    var res=TOOLS[c.name](c.arguments);logar("  ✓ "+JSON.stringify(c)+" → "+JSON.stringify(res));n++;
+   if(c.name==="navegarParaSecao"&&res&&res.sucesso){
+    navegou=true;
+   }
   });
   var textoFinal = msgSrv || (n ? "Pronto! Ação realizada." : "Não consegui fazer essa ação.");
   say(textoFinal);
   addChatMsg(textoFinal,false,textoFinal);
   falar(textoFinal);
+  if(navegou){
+   setTimeout(function(){
+    toggleChat(false);
+   }, 900);
+  }
  })
  .catch(function(){
   clearTimeout(timer);
