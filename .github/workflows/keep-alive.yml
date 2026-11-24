@@ -1,0 +1,15 @@
+name: Manter Servidor Acordado (Keep-Alive)
+
+on:
+  schedule:
+    # Executa a cada 10 minutos para impedir que o Render hiberne
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping no Portal da Melhor Idade
+        run: |
+          curl -s -f --max-time 20 "https://portal-melhor-idade.onrender.com" > /dev/null || true
