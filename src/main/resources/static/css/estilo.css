@@ -807,31 +807,31 @@ html[data-contrast="alto"] .team-card.destaque {
    ========================================================== */
 .fab-chat {
   position: fixed;
-  right: 18px;
-  bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+  right: 14px;
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   z-index: 95;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: 6px;
+  padding: 7px 12px;
   background: var(--pri);
   color: var(--onpri);
-  border: 3px solid var(--hi);
+  border: 2px solid var(--hi);
   border-radius: 9999px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
-  font-size: 1.1rem;
-  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+  font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .fab-chat:hover, .fab-chat:focus-visible {
-  transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  transform: scale(1.04);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .fab-chat .ms {
-  font-size: 1.6rem;
+  font-size: 1.15rem;
 }
 
 /* Fundo escuro (Backdrop) para focar a atenção do idoso */
